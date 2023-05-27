@@ -40,9 +40,9 @@ function mapvariable(fn::Function, name::String)
 end
 
 function floats(var)
-  return mapvariable(x->parse(Float64, x), var)
+  return map(x->parse(Float64, x), split(var))
 end
 
 function tones(var, A)
-  return mapvariable(v->tone(v; A=A), var)
+  return map(v->tone(v,A=A),split(var))
 end

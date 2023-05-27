@@ -1,20 +1,24 @@
 import Pkg
 Pkg.activate(".")
 Pkg.instantiate()
+using Revise
 
 using Flutes
 using Dates
+using YAML
 
+data = YAML.load_file("constraints_A.yaml")
 # input env vars
-tuning = parse(Float64, readvariable("FLUTE_TUNING"))
-scale = tones("FLUTE_SCALE", tuning)
-maxd = floats("FLUTE_MAX_DIAMETERS")
-maxp = floats("FLUTE_MAX_PADDING")
-rots = floats("FLUTE_HOLE_ROTATIONS")
-brk = parse(Int, readvariable("FLUTE_BREAK"))
-head_length = parse(Float64, readvariable("FLUTE_HEAD_LENGTH"))
-tenon_length = parse(Float64, readvariable("FLUTE_TENON_LENGTH"))
-trace = parse(Bool, readvariable("TRACE"))
+tuning= data["FLUTE_TUNING"]
+scale = tones(data["FLUTE_SCALE"], tuning)
+maxd = floats(data["FLUTE_MAX_DIAMETERS"])
+maxp = floats(data["FLUTE_MAX_PADDING"])
+rots = floats(data["FLUTE_HOLE_ROTATIONS"])
+brk = data["FLUTE_BREAK"]
+head_length = data["FLUTE_HEAD_LENGTH"]
+tenon_length = data["FLUTE_TENON_LENGTH"]
+trace = data["TRACE"]
+destination_file=data["DEST"]
 
 function rround(value)
   round(value; digits=3)
@@ -41,7 +45,7 @@ end
 
 # find best fit
 # all the magic happens here
-println("Optimizing flute parameters: ", ARGS[1])
+println("Optimizing flute parameters: ", destination_file)
 diameters, error = optimal(scale, mind, maxd, minp, maxp; trace=trace)
 lengths = mapflute(scale, diameters)
 # end magic
@@ -81,6 +85,7 @@ setscadparameter!(params, bodyset, "BodyLength", rround(body_length))
 setscadparameter!(params, bodyset, "HoleDiameters", rround.(body_diameters))
 setscadparameter!(params, bodyset, "HolePositions", map(bp->rround(bp-head_length), body_positions))
 setscadparameter!(params, bodyset, "HoleRotations", body_rotations)
+
 setscadparameter!(params, bodyset, "TenonLength", tenon_length)
 setscadparameter!(params, bodyset, "MortiseLength", tenon_length)
 footset = "foot.data"
@@ -94,5 +99,5 @@ setscadparameter!(params, extraset, "CreationDate", now())
 setscadparameter!(params, extraset, "Tuning", tuning)
 setscadparameter!(params, extraset, "Scale", readvariable("FLUTE_SCALE"))
 setscadparameter!(params, extraset, "Score", rround(error))
-writescadparameters(params, ARGS[1])
+writescadparameters(params, destination_file)
 

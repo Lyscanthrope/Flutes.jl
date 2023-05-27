@@ -3,8 +3,7 @@ ENVFILE=constraints
 FILETYPE=stl
 export
 # program binaries
-JULIA=docker run -it --env-file $(ENVFILE) --rm \
-			-v "$(PWD)":/Flutes -w /Flutes workshop:latest julia
+JULIA=julia
 SCAD=openscad
 SLIC3R=prusa-slicer
 SHELL=/bin/sh
@@ -45,13 +44,13 @@ gcode: $(DESTDIR)/head.gcode $(DESTDIR)/body.gcode $(DESTDIR)/foot.gcode $(DESTD
 
 # run optimization to generate parameters
 $(PARAMSFILE): $(JULIASRC)/*.jl $(JULIASRC)/lib/*.jl
-	@mkdir -pv $(dir $@)
+# @mkdir -pv $(dir $@)
 	@echo " + Compiling flute optimization algorithm..."
 	@$(JULIA) $(JULIASRC)/main.jl $@
 
 # compile scad files
 $(DESTDIR)/%.$(FILETYPE): $(SCADSRC)/%.scad $(PARAMSFILE)
-	@mkdir -pv $(DESTDIR)
+# @mkdir -pv $(DESTDIR)
 	@echo " + Modeling solid geometry: "$*
 	@$(SCAD) $< -q \
 		-p $(PARAMSFILE) -P $(notdir $(@:.$(FILETYPE)=.data)) \
